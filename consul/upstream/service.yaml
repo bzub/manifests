@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul # {"$ref":"#/definitions/io.k8s.cli.setters.instance"}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+  - name: http
+    protocol: "TCP"
+    port: 8500
+    targetPort: http
+  - name: serflan-tcp
+    protocol: "TCP"
+    port: 8301
+    targetPort: serflan-tcp
+  - name: serflan-udp
+    protocol: "UDP"
+    port: 8301
+    targetPort: serflan-udp
+  - name: serfwan-tcp
+    protocol: "TCP"
+    port: 8302
+    targetPort: serfwan-tcp
+  - name: serfwan-udp
+    protocol: "UDP"
+    port: 8302
+    targetPort: serfwan-udp
+  - name: server
+    protocol: "TCP"
+    port: 8300
+    targetPort: server
+  - name: dns-tcp
+    protocol: "TCP"
+    port: 8600
+    targetPort: dns-tcp
+  - name: dns-udp
+    protocol: "UDP"
+    port: 8600
+    targetPort: dns-udp

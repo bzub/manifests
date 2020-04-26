@@ -1,0 +1,7 @@
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: statefulset-volume-patch
+  annotations:
+    config.kubernetes.io/local-config: "true"
+path: statefulset_volume-patch.yaml

@@ -1,0 +1,34 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: consul
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "1"
+          setBy: package-default
+    io.k8s.cli.substitutions.bootstrap-expect:
+      x-k8s-cli:
+        substitution:
+          name: bootstrap-expect
+          pattern: BOOTSTRAP_EXPECT=REPLICAS_SETTER
+          values:
+          - marker: REPLICAS_SETTER
+            ref: '#/definitions/io.k8s.cli.setters.replicas'
+    io.k8s.cli.setters.instance:
+      x-k8s-cli:
+        setter:
+          name: instance
+          value: consul
+          setBy: package-default
+    io.k8s.cli.substitutions.service-name:
+      x-k8s-cli:
+        substitution:
+          name: service-name
+          pattern: SERVICE_NAME=INSTANCE_SETTER
+          values:
+          - marker: INSTANCE_SETTER
+            ref: '#/definitions/io.k8s.cli.setters.instance'

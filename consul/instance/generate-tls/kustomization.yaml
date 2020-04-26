@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+# - job_generate-tls.yaml
+- statefulset_volume-patch-transformer.yaml
+configMapGenerator:
+- name: consul-configs
+  literals:
+    - |-
+        00-agent-defaults.hcl=
+        data_dir = "/consul/data"
+        verify_incoming = true
+        verify_outgoing = true
+        ca_file = "/consul/tls/consul-agent-ca.pem"
+        ports = {
+          http = -1
+          https = 8500
+        }
+    - |-
+        00-server-defaults.hcl=
+        verify_server_hostname = true
+        cert_file = "/consul/tls/server-consul.pem"
+        key_file = "/consul/tls/server-consul-key.pem"

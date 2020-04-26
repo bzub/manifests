@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: consul-generate-tls
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Name }}-tls
+      restartPolicy: OnFailure
+      initContainers:
+        - name: generate-tls
+          image: docker.io/library/consul:1.7.2
+          command:
+            - /bin/sh
+            - -ec
+            - |-
+              tls_dir=/tls/generated
+              cd "${tls_dir}"
+              consul tls ca create
+              consul tls cert create -cli
+              consul tls cert create -client
+              for i in $(seq 3); do
+                consul tls cert create -server \
+                  -additional-dnsname "{{ .Name }}-server.{{ .Namespace }}" \
+                  -additional-dnsname "{{ .Name }}-server.{{ .Namespace }}.svc"
+              done
+          volumeMounts:
+            - mountPath: /tls/generated
+              name: tls-generated
+      containers:
+        - name: create-tls-secret
+          image: k8s.gcr.io/hyperkube:v1.17.4
+          command:
+            - /bin/sh
+            - -ec
+            - |-
+              tls_dir="/tls/generated"
+
+              secret="$(tls_server_secret_name)"
+              kubectl create secret generic "${secret}" "--from-file=${tls_dir}"
+
+              secret="$(tls_ca_secret_name)"
+              kubectl create secret generic "${secret}" \
+                "--from-file=${tls_dir}/consul-agent-ca.pem"
+
+              secret="$(tls_cli_secret_name)"
+              kubectl create secret generic "${secret}" \
+                "--from-file=${tls_dir}/dc1-cli-consul-0.pem" \
+                "--from-file=${tls_dir}/dc1-cli-consul-0-key.pem"
+
+              secret="$(tls_client_secret_name)"
+              kubectl create secret generic "${secret}" \
+                "--from-file=${tls_dir}/dc1-client-consul-0.pem" \
+                "--from-file=${tls_dir}/dc1-client-consul-0-key.pem"
+          envFrom:
+            - configMapRef:
+                name: {{ .Name }}
+          volumeMounts:
+            - mountPath: /tls/generated
+              name: tls-generated
+      volumes:
+        - name: tls-generated
+          emptyDir: {}
